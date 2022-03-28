@@ -6,7 +6,7 @@ on:
       - master
 permissions:
   id-token: write
-  contents: write
+  contents: read
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -26,6 +26,6 @@ jobs:
 
     - name: Publish to s3
       run: |
-        aws s3 cp ./output/manifest.yaml s3://custom-control-tower-configuration-765419416634-us-east-2/
-        aws s3 cp ./input-cf-templates/. s3://custom-control-tower-configuration-765419416634-us-east-2/input-cf-templates/ --recursive
-        aws s3 cp ./input-scps/. s3://custom-control-tower-configuration-765419416634-us-east-2/input-scps/ --recursive
+        aws s3 cp ./output/manifest.yaml s3://custom-control-tower-configuration-765419416634-us-east-1/
+        aws s3 cp ./input-cf-templates/. s3://custom-control-tower-configuration-765419416634-us-east-1/input-cf-templates/ --recursive
+        aws s3 cp ./input-scps/. s3://custom-control-tower-configuration-765419416634-us-east-1/input-scps/ --recursive
