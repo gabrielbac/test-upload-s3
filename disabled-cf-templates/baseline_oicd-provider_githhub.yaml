@@ -1,0 +1,25 @@
+Metadata:
+  manifest_parameters:
+    deploy_method: stackset 
+    organizational_units: ["infrastructure"]
+    regions: ["us-east-2"] 
+    export_outputs: 
+      - name: /controltowercustomizations/GithubOidcArn
+        value: $[output_Oidcarn] 
+
+  GithubOidc:
+    Type: AWS::IAM::OIDCProvider
+    Condition: CreateOIDCProvider
+    Properties:
+      Url: https://token.actions.githubusercontent.com
+      ClientIdList: 
+        - sts.amazonaws.com
+      ThumbprintList:
+        - 6938fd4d98bab03faadb97b34396831e3780aea1
+      Tags: 
+        - Key: "Created by"
+          Value: "Created by Control Tower Customization"
+
+Outputs:
+  Oidcarn:
+    Value: !GetAtt GithubOidc.Arn 

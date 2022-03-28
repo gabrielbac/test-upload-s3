@@ -1,0 +1,58 @@
+Metadata:
+  manifest_parameters:
+    deploy_method: stackset 
+    accounts: ["937081937185"] # root account
+    regions: ["us-east-2"] 
+    parameters: 
+      - parameter_key: GitHubOrg
+        parameter_value: Nifty-Island
+      - parameter_key: RepositoryName
+        parameter_value: nifty-island-control-tower
+      - parameter_key: BucketArn
+        parameter_value: custom-control-tower-configuration-937081937185-us-east-2
+    export_outputs: 
+      - name: /controltowercustomizations/ControlTowerCustomizationPipelineUploadS3
+        value: $[output_Role] 
+
+Parameters:
+  GitHubOrg:
+    Type: String
+  RepositoryName:
+    Type: String
+  BucketArn:
+    Description: Arn of the bucket created by the Customization of Control Tower.
+    Type: String
+
+Resources:
+  Role:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: ControlTowerCustomizationPipelineUploadS3
+      AssumeRolePolicyDocument:
+        Statement:
+          - Effect: Allow
+            Action: sts:AssumeRoleWithWebIdentity
+            Principal:
+              Federated: !Sub arn:aws:iam::${AWS::AccountId}:oidc-provider/token.actions.githubusercontent.com
+            Condition:
+              StringLike:
+                token.actions.githubusercontent.com:sub: !Sub repo:${GitHubOrg}/${RepositoryName}:*
+      Policies:
+        - PolicyName: AllowUploadToS3
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action: 
+                  - s3:PutObject
+                  - s3:PutObjectAcl
+                  - s3:PutObjectVersionAcl
+                  - s3:ListBucket
+                Resource: !Sub 'arn:aws:s3:::${BucketArn}/*'
+      Tags: 
+        - Key: "Created by"
+          Value: "Created by Control Tower Customization"
+
+Outputs:
+  Role:
+    Value: !GetAtt Role.Arn 

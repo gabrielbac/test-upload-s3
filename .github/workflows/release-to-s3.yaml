@@ -1,0 +1,29 @@
+name: Release to S3
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: 'pypy-3.8'
+
+    - name: configure aws credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          role-to-assume: arn:aws:iam::765419416634:role/ControlTowerCustomizationPipelineUploadS3
+          role-session-name: ControlTowerCustomizationPipelineUploadS3
+          aws-region: us-east-2
+
+    - name: Publish to s3
+      run: |
+        aws s3 cp ./output/manifest.yaml s3://custom-control-tower-configuration-765419416634-us-east-2/
+        aws s3 cp ./input-cf-templates/. s3://custom-control-tower-configuration-765419416634-us-east-2/input-cf-templates/ --recursive
+        aws s3 cp ./input-scps/. s3://custom-control-tower-configuration-765419416634-us-east-2/input-scps/ --recursive
