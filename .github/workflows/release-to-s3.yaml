@@ -26,6 +26,9 @@ jobs:
 
     - name: Publish to s3
       run: |
-        aws s3 cp ./output/manifest.yaml s3://custom-control-tower-configuration-765419416634-us-east-1/
-        aws s3 cp ./input-cf-templates/. s3://custom-control-tower-configuration-765419416634-us-east-1/input-cf-templates/ --recursive
-        aws s3 cp ./input-scps/. s3://custom-control-tower-configuration-765419416634-us-east-1/input-scps/ --recursive
+        output="output/manifest.yaml"
+        cf-templates-"input-cf-templates"
+        scps="input-scps"
+        test -f ./$output && aws s3 cp ./$output s3://custom-control-tower-configuration-765419416634-us-east-1/
+        test -d ./$cf-templates && aws s3 cp ./$cf-templates/. s3://custom-control-tower-configuration-765419416634-us-east-1/input-cf-templates/ --recursive
+        test -d ./$scps && aws s3 cp ./$scps/. s3://custom-control-tower-configuration-765419416634-us-east-1/input-scps/ --recursive
