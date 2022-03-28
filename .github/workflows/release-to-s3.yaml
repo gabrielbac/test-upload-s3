@@ -16,11 +16,11 @@ jobs:
         python-version: 'pypy-3.8'
 
     - name: configure aws credentials
-        uses: aws-actions/configure-aws-credentials@v1
-        with:
-          role-to-assume: arn:aws:iam::765419416634:role/ControlTowerCustomizationPipelineUploadS3
-          role-session-name: ControlTowerCustomizationPipelineUploadS3
-          aws-region: us-east-2
+      uses: aws-actions/configure-aws-credentials@v1
+      with:
+        role-to-assume: arn:aws:iam::765419416634:role/ControlTowerCustomizationPipelineUploadS3
+        role-session-name: ControlTowerCustomizationPipelineUploadS3
+        aws-region: us-east-2
 
     - name: Publish to s3
       run: |
