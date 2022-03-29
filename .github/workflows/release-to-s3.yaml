@@ -19,6 +19,10 @@ jobs:
       uses: actions/setup-python@v2
       with:
         python-version: 'pypy-3.8'
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
 
     - name: configure aws credentials
       uses: aws-actions/configure-aws-credentials@v1
@@ -26,6 +30,10 @@ jobs:
         role-to-assume: arn:aws:iam::${{ env.ROOT_ACCOUNT }}:role/ControlTowerCustomizationPipelineUploadS3
         role-session-name: ControlTowerCustomizationPipelineUploadS3
         aws-region: us-east-1
+
+    - name: Build
+      run: |
+        aws_control_tower_manifest_builder --default-region us-east-1 --input-cf input-cf-templates --input-scp input-scps --abort-if-error TRUE --output .
 
     - name: Publish to s3
       run: |
