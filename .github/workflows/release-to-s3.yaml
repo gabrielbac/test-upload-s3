@@ -33,9 +33,20 @@ jobs:
 
     - name: Build
       run: |
-        aws_control_tower_manifest_builder --default-region us-east-1 --input-cf input-cf-templates --input-scp input-scps --abort-if-error TRUE --output .
+        if aws_control_tower_manifest_builder \
+                --default-region us-east-1 \
+                --input-cf input-cf-templates \
+                --input-scp input-scps \
+                --abort-if-error TRUE \
+                --output . ; then
+          echo "::set-output name=result::true"
+        else
+          echo "::set-output name=result::false"
+          exit 1
+        fi
 
     - name: Publish to s3
+      if: steps.build.outputs.result == 'true'
       run: |
         zip -r custom-control-tower-configuration.zip manifest.yaml input-cf-templates input-scps
         aws s3 cp custom-control-tower-configuration.zip  s3://custom-control-tower-configuration-"$ROOT_ACCOUNT"-us-east-1/

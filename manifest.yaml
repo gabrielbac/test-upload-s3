@@ -1,0 +1,21 @@
+region: us-east-2
+version: 2021-03-15
+resources: # List of resources
+- name: rootaccount_githubrole_control-tower-pipeline
+  resource_file: input-cf-templates/rootaccount_githubrole_control-tower-pipeline.yaml      #<String> [Local File Path, S3 URL]
+  deployment_targets:   # account and/or organizational unit names
+    accounts:   # array of strings, [0-9]{12}
+    - 937081937185
+  deploy_method: stack_set   # scp | stack_set
+  parameters:   # List of parameters [SSM, Alfred, Values]
+  - parameter_key: GitHubOrg
+    parameter_value: Nifty-Island
+  - parameter_key: RepositoryName
+    parameter_value: nifty-island-control-tower
+  - parameter_key: BucketArn
+    parameter_value: custom-control-tower-configuration-937081937185-us-east-2
+  export_outputs:   # list of ssm parameters to store output values
+  - name: /controltowercustomizations/ControlTowerCustomizationPipelineUploadS3
+    value: $[output_Role]
+  regions:
+  - us-east-2
