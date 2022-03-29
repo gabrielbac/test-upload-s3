@@ -4,6 +4,9 @@ on:
   push:
     branches:
       - master
+env:
+  ROOT_ACCOUNT: "765419416634"
+
 permissions:
   id-token: write
   contents: read
@@ -20,11 +23,11 @@ jobs:
     - name: configure aws credentials
       uses: aws-actions/configure-aws-credentials@v1
       with:
-        role-to-assume: arn:aws:iam::765419416634:role/ControlTowerCustomizationPipelineUploadS3
+        role-to-assume: arn:aws:iam::$ROOT_ACCOUNT:role/ControlTowerCustomizationPipelineUploadS3
         role-session-name: ControlTowerCustomizationPipelineUploadS3
         aws-region: us-east-1
 
     - name: Publish to s3
       run: |
-        zip -r custom-control-tower-configuration.zip output/manifest.yaml input-cf-templates input-scps
-        aws s3 cp custom-control-tower-configuration.zip  s3://custom-control-tower-configuration-765419416634-us-east-1/
+        zip -r custom-control-tower-configuration.zip manifest.yaml input-cf-templates input-scps
+        aws s3 cp custom-control-tower-configuration.zip  s3://custom-control-tower-configuration-$ROOT_ACCOUNT-us-east-1/
