@@ -23,7 +23,7 @@ jobs:
     - name: configure aws credentials
       uses: aws-actions/configure-aws-credentials@v1
       with:
-        role-to-assume: arn:aws:iam::"$ROOT_ACCOUNT":role/ControlTowerCustomizationPipelineUploadS3
+        role-to-assume: arn:aws:iam::${{ env.ROOT_ACCOUNT }}:role/ControlTowerCustomizationPipelineUploadS3
         role-session-name: ControlTowerCustomizationPipelineUploadS3
         aws-region: us-east-1
 
