@@ -46,7 +46,7 @@ jobs:
         fi
 
     - name: Publish to s3
-      if: steps.build.outputs.result == 'true'
+      if: steps.Build.outputs.result == 'true'
       run: |
         zip -r custom-control-tower-configuration.zip manifest.yaml input-cf-templates input-scps
         aws s3 cp custom-control-tower-configuration.zip  s3://custom-control-tower-configuration-"$ROOT_ACCOUNT"-us-east-1/
