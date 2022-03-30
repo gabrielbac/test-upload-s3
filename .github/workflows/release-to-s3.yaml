@@ -27,6 +27,7 @@ jobs:
     - name: determine if push to S3 is required
       id: getdiff
       run: |    
+        git diff --name-only HEAD^ HEAD
         git diff --name-only HEAD^ HEAD \
             | grep -v "^\." | grep "/" | cut -f1 -d"/"| uniq \
             | egrep "input-cf-templates|input-scps" && echo "::set-output name=result::true"
