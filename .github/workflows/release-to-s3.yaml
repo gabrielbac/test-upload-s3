@@ -30,7 +30,7 @@ jobs:
         git diff --name-only HEAD^ HEAD
         git diff --name-only HEAD^ HEAD \
             | grep -v "^\." | grep "/" | cut -f1 -d"/"| uniq \
-            | egrep "input-cf-templates|input-scps" && echo "::set-output name=result::true"
+            | grep input && echo "::set-output name=result::true"
     
     - name: Install dependencies
       if: steps.getdiff.outputs.result == 'true'
