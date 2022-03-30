@@ -51,7 +51,7 @@ Resources:
                 Resource: !Sub 'arn:aws:s3:::${BucketArn}/*'
       Tags: 
         - Key: "Created by"
-          Value: "Created by Control Tower Customization"
+          Value: "Created by Control Tower Customizationoooo"
 
 Outputs:
   Role:

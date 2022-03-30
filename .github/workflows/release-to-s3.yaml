@@ -28,7 +28,7 @@ jobs:
       id: getdiff
       run: |    
         git diff --name-only HEAD^ HEAD
-        if git diff --name-only HEAD^ HEAD | grep -v "^\." | grep "/" | cut -f1 -d"/"| uniq | grep input ; then
+        if git diff --name-only HEAD^ HEAD | grep -v "^\." | grep "/" | cut -f1 -d"/"| uniq | grep "input-" ; then
           echo "::set-output name=result::true"
         fi
     
