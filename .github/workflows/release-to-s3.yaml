@@ -14,22 +14,28 @@ jobs:
   test:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - name: Checkout
+      uses: actions/checkout@v2
+      with:
+        fetch-depth: 0
+    
     - name: Set up Python
       uses: actions/setup-python@v2
       with:
         python-version: 'pypy-3.8'
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
-
+    
     - name: determine if push to S3 is required
       id: getdiff
       run: |    
         git diff --name-only HEAD^ HEAD \
             | grep -v "^\." | grep "/" | cut -f1 -d"/"| uniq \
             | egrep "input-cf-templates|input-scps" && echo "::set-output name=result::true"
+    
+    - name: Install dependencies
+      if: steps.getdiff.outputs.result == 'true'
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
 
     - name: configure aws credentials
       if: steps.getdiff.outputs.result == 'true'
