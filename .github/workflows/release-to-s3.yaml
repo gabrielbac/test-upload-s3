@@ -28,7 +28,8 @@ jobs:
       id: getdiff
       run: |    
         git diff --name-only HEAD^ HEAD
-        git diff --name-only HEAD^ HEAD | grep -v "^\." | grep "/" | cut -f1 -d"/"| uniq | grep input && echo "::set-output name=result::true"
+        if git diff --name-only HEAD^ HEAD | grep -v "^\." | grep "/" | cut -f1 -d"/"| uniq | grep input ; then
+          echo "::set-output name=result::true"
     
     - name: Install dependencies
       if: steps.getdiff.outputs.result == 'true'
