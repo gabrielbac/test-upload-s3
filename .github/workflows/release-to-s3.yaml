@@ -24,7 +24,15 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
 
+    - name: determine if push to S3 is required
+      id: getdiff
+      run: |    
+        git diff --name-only HEAD^ HEAD \
+            | grep -v "^\." | grep "/" | cut -f1 -d"/"| uniq \
+            | egrep "input-cf-templates|input-scps" && echo "::set-output name=result::true"
+
     - name: configure aws credentials
+      if: steps.getdiff.outputs.result == 'true'
       uses: aws-actions/configure-aws-credentials@v1
       with:
         role-to-assume: arn:aws:iam::${{ env.ROOT_ACCOUNT }}:role/ControlTowerCustomizationPipelineUploadS3
@@ -32,6 +40,7 @@ jobs:
         aws-region: us-east-1
 
     - name: Build
+      if: steps.getdiff.outputs.result == 'true'
       id: build
       run: |
         if aws_control_tower_manifest_builder \
@@ -47,7 +56,7 @@ jobs:
         fi
 
     - name: Publish to s3
-      if: steps.build.outputs.result == 'true'
+      if: steps.build.outputs.result == 'true' && steps.getdiff.outputs.result == 'true'
       run: |
         zip -r custom-control-tower-configuration.zip manifest.yaml input-cf-templates input-scps
         aws s3 cp custom-control-tower-configuration.zip  s3://custom-control-tower-configuration-"$ROOT_ACCOUNT"-us-east-1/

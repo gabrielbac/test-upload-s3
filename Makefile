@@ -1,4 +1,4 @@
-.PHONY: run clean venv
+.PHONY: run clean venv build zip run
 .DEFAULT_GOAL := help
 VENV = venv
 PYTHON = $(VENV)/bin/python3
