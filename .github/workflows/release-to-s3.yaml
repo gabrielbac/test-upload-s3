@@ -60,7 +60,7 @@ jobs:
           echo "::set-output name=result::false"
         fi
         OUTPUT="${OUTPUT//'%'/'%25'}"
-        OUTPUT="${OUTPUT//$'\n'/'%0A'}"
+        OUTPUT="${OUTPUT//$'\n'/'<br />'}"
         OUTPUT="${OUTPUT//$'\r'/'%0D'}"
         echo "::set-output name=output::$OUTPUT"
 
@@ -79,7 +79,7 @@ jobs:
           echo "::set-output name=result::false"
         fi
         OUTPUT="${OUTPUT//'%'/'%25'}"
-        OUTPUT="${OUTPUT//$'\n'/'%0A'}"
+        OUTPUT="${OUTPUT//$'\n'/'<br />'}"
         OUTPUT="${OUTPUT//$'\r'/'%0D'}"
         echo "::set-output name=output::$OUTPUT"
 
