@@ -54,21 +54,21 @@ jobs:
       if: steps.getdiff.outputs.result == 'true'
       id: checkov
       run: |
-        if OUTPUT=$(checkov -d input-cf-templates --external-checks-dir policies --quiet --framework cloudformation); then
+        if CHECKOV_OUTPUT=$(checkov -d input-cf-templates --external-checks-dir policies --quiet --framework cloudformation); then
           echo "::set-output name=result::true"
         else
           echo "::set-output name=result::false"
         fi
-        OUTPUT="${OUTPUT//'%'/'%25'}"
-        OUTPUT="${OUTPUT//$'\n'/'<br />'}"
-        OUTPUT="${OUTPUT//$'\r'/'%0D'}"
-        echo "::set-output name=output::$OUTPUT"
+        echo "$CHECKOV_OUTPUT"
+        echo "CHECKOV_OUTPUT<<EOF" >> $GITHUB_ENV
+        echo "$CHECKOV_OUTPUT" >> $GITHUB_ENV
+        echo "EOF" >> $GITHUB_ENV
 
     - name: Build
       if: steps.getdiff.outputs.result == 'true'
       id: build
       run: |
-        if OUTPUT=$(aws_control_tower_manifest_builder \
+        if BUILD_OUTPUT=$(aws_control_tower_manifest_builder \
                 --default-region us-east-1 \
                 --input-cf input-cf-templates \
                 --input-scp input-scps \
@@ -78,16 +78,17 @@ jobs:
         else
           echo "::set-output name=result::false"
         fi
-        OUTPUT="${OUTPUT//'%'/'%25'}"
-        OUTPUT="${OUTPUT//$'\n'/'<br />'}"
-        OUTPUT="${OUTPUT//$'\r'/'%0D'}"
-        echo "::set-output name=output::$OUTPUT"
+        echo "$BUILD_OUTPUT"
+        echo "$BUILD_OUTPUT"
+        echo "BUILD_OUTPUT<<EOF" >> $GITHUB_ENV
+        echo "$BUILD_OUTPUT" >> $GITHUB_ENV
+        echo "EOF" >> $GITHUB_ENV
 
     - name: Update Pull Request with Build Result
       uses: actions/github-script@0.9.0
       if: github.event_name == 'pull_request'
       env:
-          CHECKOV: "${{ steps.checkov.outputs.output }}"
+          CHECKOV: "${{ env.CHECKOV_OUTPUT }}"
           BUILD: "${{ steps.build.outputs.output }}"
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
