@@ -75,12 +75,20 @@ jobs:
     - name: Update Pull Request with Build Result
       uses: actions/github-script@0.9.0
       if: github.event_name == 'pull_request'
+      env:
+          CHECKOV: "Checkov\n${{ steps.checkov.outputs.stdout }}"
+          BUILD: "Manifest Builder\n${{ steps.build.outputs.stdout }}"
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
         script: |
           const output = `#### Manifest Builder \`${{ steps.build.outcome }}\`
+          <details><summary>Manifest Builder Results</summary>
+            \`\`\`${process.env.BUILD}\`\`\`
+            </details>
           #### Checkov \`${{ steps.checkov.outcome }}\`
-
+          <details><summary>Show Checkov Results</summary>
+            \`\`\`${process.env.CHECKOV}\`\`\`
+            </details>
           *Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`*`;
             
           github.issues.createComment({
