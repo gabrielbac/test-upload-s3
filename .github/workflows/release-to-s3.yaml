@@ -59,8 +59,10 @@ jobs:
         else
           echo "::set-output name=result::false"
         fi
+        OUTPUT="${OUTPUT//'%'/'%25'}"
+        OUTPUT="${OUTPUT//$'\n'/'%0A'}"
+        OUTPUT="${OUTPUT//$'\r'/'%0D'}"
         echo "::set-output name=output::$OUTPUT"
-
 
     - name: Build
       if: steps.getdiff.outputs.result == 'true'
@@ -76,6 +78,9 @@ jobs:
         else
           echo "::set-output name=result::false"
         fi
+        OUTPUT="${OUTPUT//'%'/'%25'}"
+        OUTPUT="${OUTPUT//$'\n'/'%0A'}"
+        OUTPUT="${OUTPUT//$'\r'/'%0D'}"
         echo "::set-output name=output::$OUTPUT"
 
     - name: Update Pull Request with Build Result
@@ -86,6 +91,7 @@ jobs:
           BUILD: "${{ steps.build.outputs.output }}"
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
+        # Keep spaces below closing details
         script: |
           const output = `#### Manifest Builder \`${{ steps.build.outcome }}\`
           <details><summary>Manifest Builder Results</summary>
@@ -96,7 +102,7 @@ jobs:
           <details><summary>Show Checkov Results</summary>
             \`\`\`${process.env.CHECKOV}\`\`\`
             </details>
-            
+
           *Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`*`;
             
           github.issues.createComment({
