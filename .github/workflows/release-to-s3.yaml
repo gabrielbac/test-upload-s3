@@ -76,8 +76,8 @@ jobs:
       uses: actions/github-script@0.9.0
       if: github.event_name == 'pull_request'
       env:
-          CHECKOV: "Checkov\n${{ steps.checkov.outputs.stdout }}"
-          BUILD: "Manifest Builder\n${{ steps.build.outputs.stdout }}"
+          CHECKOV: "${{ steps.checkov.outputs.stdout }}"
+          BUILD: "${{ steps.build.outputs.stdout }}"
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
         script: |
