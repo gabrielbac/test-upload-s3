@@ -89,7 +89,7 @@ jobs:
       if: github.event_name == 'pull_request'
       env:
           CHECKOV: "${{ env.CHECKOV_OUTPUT }}"
-          BUILD: "${{ env.BUILD_OUTPUT }}"
+          BUILD: "${{ steps.build.outputs.output }}"
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
         # Keep spaces below closing details
