@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - master
+  pull_request:
+
 env:
   ROOT_ACCOUNT: "765419416634"
 
@@ -46,6 +48,12 @@ jobs:
         role-session-name: ControlTowerCustomizationPipelineUploadS3
         aws-region: us-east-1
 
+    - name: Checkov
+      if: steps.getdiff.outputs.result == 'true'
+      id: checkov
+      run: |
+        checkov -d input-cf-templates/ --external-checks-dir policies --quiet --framework cloudformation 
+
     - name: Build
       if: steps.getdiff.outputs.result == 'true'
       id: build
@@ -62,8 +70,25 @@ jobs:
           exit 1
         fi
 
+      - name: Update Pull Request with Build Result
+        uses: actions/github-script@0.9.0
+        if: github.event_name == 'pull_request'
+        with:
+          script: |
+            const output = `#### Manifest Builder \`${{ steps.build.outcome }}\`
+            #### Checkov \`${{ steps.checkov.outcome }}\`
+
+            *Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`*`;
+              
+            github.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: output
+            })
+
     - name: Publish to s3
-      if: steps.build.outputs.result == 'true' && steps.getdiff.outputs.result == 'true'
+      if: steps.build.outputs.result == 'true' && steps.getdiff.outputs.result == 'true' && github.event_name == 'push' 
       run: |
         zip -r custom-control-tower-configuration.zip manifest.yaml input-cf-templates input-scps
         aws s3 cp custom-control-tower-configuration.zip  s3://custom-control-tower-configuration-"$ROOT_ACCOUNT"-us-east-1/

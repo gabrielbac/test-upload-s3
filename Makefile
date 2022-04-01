@@ -12,7 +12,7 @@ venv: ## Creates virtual enviroment (if it does not exist) and installs requirem
 	. $(VENV)/bin/activate
 	$(PIP) install --upgrade -r requirements.txt
 
-run: build zip ## Runs command that produces the manifest file and zips it with the templates.
+run: checkov build zip ## Runs checkov and then command that produces the manifest file and zips it with the templates.
 
 build:  ## Runs command that produces the manifest file in the output directory ans zips it.
 	. $(VENV)/bin/activate
@@ -26,6 +26,10 @@ build:  ## Runs command that produces the manifest file in the output directory 
 
 zip: ## Zips the contents in custom-control-tower-configuration.zip 
 	zip -r custom-control-tower-configuration.zip manifest.yaml input-cf-templates input-scps
+
+checkov: ## Runs checkov
+	. $(VENV)/bin/activate
+	checkov -d input-cf-templates/ --external-checks-dir policies --quiet --framework cloudformation 
 
 clean: ## Removes __pycache and virtual environment 
 	rm -rf __pycache__
