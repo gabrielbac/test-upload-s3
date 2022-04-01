@@ -56,11 +56,8 @@ jobs:
       run: |
         if OUTPUT=$(checkov -d input-cf-templates --external-checks-dir policies --quiet --framework cloudformation); then
           echo "::set-output name=result::true"
-          echo "$OUTPUT"
         else
           echo "::set-output name=result::false"
-          echo "$OUTPUT"
-          exit 1
         fi
         echo "::set-output name=output::$OUTPUT"
 
@@ -76,11 +73,8 @@ jobs:
                 --abort-if-error TRUE \
                 --output .) ; then 
           echo "::set-output name=result::true"
-          echo "$OUTPUT"
         else
           echo "::set-output name=result::false"
-          echo "$OUTPUT"
-          exit 1
         fi
         echo "::set-output name=output::$OUTPUT"
 
@@ -88,8 +82,8 @@ jobs:
       uses: actions/github-script@0.9.0
       if: github.event_name == 'pull_request'
       env:
-          CHECKOV: "${{ steps.checkov.outputs.stdout }}"
-          BUILD: "${{ steps.build.outputs.stdout }}"
+          CHECKOV: "${{ steps.checkov.outputs.output }}"
+          BUILD: "${{ steps.build.outputs.output }}"
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }}
         script: |
@@ -97,10 +91,12 @@ jobs:
           <details><summary>Manifest Builder Results</summary>
             \`\`\`${process.env.BUILD}\`\`\`
             </details>
+
           #### Checkov \`${{ steps.checkov.outcome }}\`
           <details><summary>Show Checkov Results</summary>
             \`\`\`${process.env.CHECKOV}\`\`\`
             </details>
+            
           *Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`*`;
             
           github.issues.createComment({
@@ -110,8 +106,15 @@ jobs:
             body: output
           })
 
+    - name: Exit on Checkov and Manifest Builder Failure
+      if: steps.build.outputs.result == 'false' || steps.checkov.outputs.result == 'false'
+      run: |
+        echo "${{ steps.checkov.outputs.output }}"
+        echo "${{ steps.build.outputs.output }}"
+        exit 1
+
     - name: Publish to s3
-      if: steps.build.outputs.result == 'true' && steps.getdiff.outputs.result == 'true' && github.event_name == 'push' && steps.checkov.outputs.result == 'true'
+      if:  steps.getdiff.outputs.result == 'true' && github.event_name == 'push'
       run: |
         zip -r custom-control-tower-configuration.zip manifest.yaml input-cf-templates input-scps
         aws s3 cp custom-control-tower-configuration.zip  s3://custom-control-tower-configuration-"$ROOT_ACCOUNT"-us-east-1/
