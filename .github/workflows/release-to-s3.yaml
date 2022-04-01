@@ -52,7 +52,7 @@ jobs:
       if: steps.getdiff.outputs.result == 'true'
       id: checkov
       run: |
-        checkov -d input-cf-templates/ --external-checks-dir policies --quiet --framework cloudformation 
+        checkov -d input-cf-templates/ --external-checks-dir policies --quiet --framework cloudformation
 
     - name: Build
       if: steps.getdiff.outputs.result == 'true'
