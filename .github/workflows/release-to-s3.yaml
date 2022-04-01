@@ -70,22 +70,22 @@ jobs:
           exit 1
         fi
 
-      - name: Update Pull Request with Build Result
-        uses: actions/github-script@0.9.0
-        if: github.event_name == 'pull_request'
-        with:
-          script: |
-            const output = `#### Manifest Builder \`${{ steps.build.outcome }}\`
-            #### Checkov \`${{ steps.checkov.outcome }}\`
+    - name: Update Pull Request with Build Result
+      uses: actions/github-script@0.9.0
+      if: github.event_name == 'pull_request'
+      with:
+        script: |
+          const output = `#### Manifest Builder \`${{ steps.build.outcome }}\`
+          #### Checkov \`${{ steps.checkov.outcome }}\`
 
-            *Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`*`;
-              
-            github.issues.createComment({
-              issue_number: context.issue.number,
-              owner: context.repo.owner,
-              repo: context.repo.repo,
-              body: output
-            })
+          *Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`*`;
+            
+          github.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: output
+          })
 
     - name: Publish to s3
       if: steps.build.outputs.result == 'true' && steps.getdiff.outputs.result == 'true' && github.event_name == 'push' 
