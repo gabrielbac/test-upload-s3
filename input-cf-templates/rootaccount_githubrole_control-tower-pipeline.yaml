@@ -51,7 +51,7 @@ Resources:
                 Resource: !Sub 'arn:aws:s3:::${BucketArn}/*'
       Tags: 
         - Key: "iac-platform"
-          Value: "Control Tower Customization"
+          Value: "Control Tower Customization9"
 
 Outputs:
   Role:

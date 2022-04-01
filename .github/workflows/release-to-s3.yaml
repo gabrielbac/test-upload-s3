@@ -54,23 +54,31 @@ jobs:
       if: steps.getdiff.outputs.result == 'true'
       id: checkov
       run: |
-        checkov -d input-cf-templates --external-checks-dir policies --quiet --framework cloudformation
-
-    - name: Build
-      if: steps.getdiff.outputs.result == 'true'
-      id: build
-      run: |
-        if aws_control_tower_manifest_builder \
-                --default-region us-east-1 \
-                --input-cf input-cf-templates \
-                --input-scp input-scps \
-                --abort-if-error TRUE \
-                --output . ; then 
+        if OUTPUT=$(checkov -d input-cf-templates --external-checks-dir policies --quiet --framework cloudformation); then
           echo "::set-output name=result::true"
         else
           echo "::set-output name=result::false"
           exit 1
         fi
+        echo "::set-output name=output::$OUTPUT"
+
+
+    - name: Build
+      if: steps.getdiff.outputs.result == 'true'
+      id: build
+      run: |
+        if OUTPUT=$(aws_control_tower_manifest_builder \
+                --default-region us-east-1 \
+                --input-cf input-cf-templates \
+                --input-scp input-scps \
+                --abort-if-error TRUE \
+                --output .) ; then 
+          echo "::set-output name=result::true"
+        else
+          echo "::set-output name=result::false"
+          exit 1
+        fi
+        echo "::set-output name=output::$OUTPUT"
 
     - name: Update Pull Request with Build Result
       uses: actions/github-script@0.9.0
@@ -99,7 +107,7 @@ jobs:
           })
 
     - name: Publish to s3
-      if: steps.build.outputs.result == 'true' && steps.getdiff.outputs.result == 'true' && github.event_name == 'push' 
+      if: steps.build.outputs.result == 'true' && steps.getdiff.outputs.result == 'true' && github.event_name == 'push' && steps.checkov.outputs.result == 'true'
       run: |
         zip -r custom-control-tower-configuration.zip manifest.yaml input-cf-templates input-scps
         aws s3 cp custom-control-tower-configuration.zip  s3://custom-control-tower-configuration-"$ROOT_ACCOUNT"-us-east-1/
