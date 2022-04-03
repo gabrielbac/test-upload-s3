@@ -4,12 +4,16 @@ on:
   push:
     branches:
       - master
+  pull_request:
+
 env:
   ROOT_ACCOUNT: "765419416634"
 
 permissions:
   id-token: write
   contents: read
+  pull-requests: write
+  
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -46,24 +50,78 @@ jobs:
         role-session-name: ControlTowerCustomizationPipelineUploadS3
         aws-region: us-east-1
 
+    - name: Checkov
+      if: steps.getdiff.outputs.result == 'true'
+      id: checkov
+      run: |
+        if OUTPUT=$(checkov -d input-cf-templates --external-checks-dir policies --quiet --framework cloudformation); then
+          echo "::set-output name=result::true"
+        else
+          echo "::set-output name=result::false"
+        fi
+        OUTPUT="${OUTPUT//'%'/'%25'}"
+        OUTPUT="${OUTPUT//$'\n'/'<br />'}"
+        OUTPUT="${OUTPUT//$'\r'/'%0D'}"
+        echo "::set-output name=output::$OUTPUT"
+
     - name: Build
       if: steps.getdiff.outputs.result == 'true'
       id: build
       run: |
-        if aws_control_tower_manifest_builder \
+        if OUTPUT=$(aws_control_tower_manifest_builder \
                 --default-region us-east-1 \
                 --input-cf input-cf-templates \
                 --input-scp input-scps \
                 --abort-if-error TRUE \
-                --output . ; then 
+                --output .) ; then 
           echo "::set-output name=result::true"
         else
           echo "::set-output name=result::false"
-          exit 1
         fi
+        OUTPUT="${OUTPUT//'%'/'%25'}"
+        OUTPUT="${OUTPUT//$'\n'/'<br />'}"
+        OUTPUT="${OUTPUT//$'\r'/'%0D'}"
+        echo "::set-output name=output::$OUTPUT"
+
+    - name: Update Pull Request with Build Result
+      uses: actions/github-script@0.9.0
+      if: github.event_name == 'pull_request'
+      env:
+          CHECKOV: "${{ steps.checkov.outputs.output }}"
+          BUILD: "${{ steps.build.outputs.output }}"
+      with:
+        github-token: ${{ secrets.GITHUB_TOKEN }}
+        # Keep spaces below closing details
+        script: |
+          const output = `#### Manifest Builder \`${{ steps.build.outcome }}\`
+          <details><summary>Manifest Builder Results</summary>
+            \`\`\`${process.env.BUILD}\`\`\`
+            </details>
+
+          #### Checkov \`${{ steps.checkov.outcome }}\`
+          <details><summary>Show Checkov Results</summary>
+            \`\`\`${process.env.CHECKOV}\`\`\`
+            </details>
+
+          *Pusher: @${{ github.actor }}, Action: \`${{ github.event_name }}\`*`;
+            
+          github.issues.createComment({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            body: output
+          })
+
+    - name: Exit on Checkov and Manifest Builder Failure
+      if: steps.build.outputs.result == 'false' || steps.checkov.outputs.result == 'false'
+      run: |
+        echo "${{ steps.checkov.outputs.output }}"
+        echo "${{ steps.build.outputs.output }}"
+        exit 1
 
     - name: Publish to s3
-      if: steps.build.outputs.result == 'true' && steps.getdiff.outputs.result == 'true'
+      # To Do
+      if:  steps.getdiff.outputs.result == 'true' && github.event_name == 'push' && github.ref_name == 'master'
       run: |
         zip -r custom-control-tower-configuration.zip manifest.yaml input-cf-templates input-scps
         aws s3 cp custom-control-tower-configuration.zip  s3://custom-control-tower-configuration-"$ROOT_ACCOUNT"-us-east-1/
