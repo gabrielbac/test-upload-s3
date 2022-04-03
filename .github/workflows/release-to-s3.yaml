@@ -120,7 +120,8 @@ jobs:
         exit 1
 
     - name: Publish to s3
-      if:  steps.getdiff.outputs.result == 'true' && github.event_name == 'push'
+      # To Do
+      if:  steps.getdiff.outputs.result == 'true' && github.event_name == 'push' && github.ref_name == 'master'
       run: |
         zip -r custom-control-tower-configuration.zip manifest.yaml input-cf-templates input-scps
         aws s3 cp custom-control-tower-configuration.zip  s3://custom-control-tower-configuration-"$ROOT_ACCOUNT"-us-east-1/
